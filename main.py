@@ -1,8 +1,8 @@
 import cv2 as cv
 import numpy as np
 import streamlit as st
-import matplotlib.pyplot as plt
-import easyocr
+from easyocr import Reader
+from PIL import Image
 # -----
 
 
@@ -18,19 +18,14 @@ def resize(img):
 
 
 def contour_extractor(img):
-    img_copy = img.copy()
-    # !!!!!!
-
 
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     blur = cv.GaussianBlur(gray, (3,3), 2)
     edges = cv.Canny(blur, 50, 200)
     contours, _ = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     sorted_contours = sorted(contours, key=cv.contourArea, reverse=True)
-    
-    cv.drawContours(img_copy, sorted_contours, -1, (0,255,0), 3)
 
-    return sorted_contours, img_copy, edges
+    return sorted_contours
 # -----
 
 
@@ -101,24 +96,39 @@ def perspective_extractor(contours, img):
 
     
 
+reader = Reader(['en'], gpu=False)
 
 
-
-reader = easyocr.Reader(['en'], gpu=False)
-img = cv.imread(r"images\entxt5.jpg")
-img = resize(img)
-contours, res, edges = contour_extractor(img)
-finnal_img, texts = perspective_extractor(contours, img)
-
-print(texts)
+st.title("Text Extraction")
+st.header(" ")
 
 
+st.subheader("Suggestions to take better quality")
+st.info("It's better to have less background noise")
+st.info("Image with more clear text will generate better result")
+st.info("Quality of image is very important")
+
+uploaded_img = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg"])
+if uploaded_img:
+    img = Image.open(uploaded_img)
+    img = np.array(img)
 
 
-cv.imshow('res', res)
-cv.imshow('finnal_img', finnal_img)
-cv.waitKey()
-cv.destroyAllWindows()
+    img = resize(img)
+    contours = contour_extractor(img)
+    finnal_img, texts = perspective_extractor(contours, img)
+
+    st.image(finnal_img, width=300)
+
+    if texts == False:
+        st.warning("Not detected")
+    else:
+        st.success("Detected")
+        for i in texts:
+            st.text(f"{i}")
+            
+            
+
 
 
 
