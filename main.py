@@ -29,13 +29,13 @@ def contour_extractor(img):
 # -----
 
 
-
+text_list = []
 def text_detection(img):
     copyimg = img.copy()
     gray_copy = cv.cvtColor(copyimg, cv.COLOR_BGR2GRAY)
     thereshold = cv.adaptiveThreshold(gray_copy, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 5, 3)
 
-    text_list = []
+    
     result = reader.readtext(thereshold)
     for (bbox, text, prob) in result:
         (tl, tr, br, bl) = bbox
@@ -108,25 +108,28 @@ st.info("It's better to have less background noise")
 st.info("Image with more clear text will generate better result")
 st.info("Quality of image is very important")
 
-uploaded_img = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg"])
-if uploaded_img:
-    img = Image.open(uploaded_img)
-    img = np.array(img)
+try:
+    uploaded_img = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg"])
+    if uploaded_img:
+        img = Image.open(uploaded_img)
+        img = np.array(img)
 
 
-    img = resize(img)
-    contours = contour_extractor(img)
-    finnal_img, texts = perspective_extractor(contours, img)
+        img = resize(img)
+        contours = contour_extractor(img)
+        finnal_img, texts = perspective_extractor(contours, img)
 
-    st.image(finnal_img, width=300)
+        st.image(finnal_img, width=300)
 
-    if texts == False:
-        st.warning("Not detected")
-    else:
-        st.success("Detected")
-        for i in texts:
-            st.text(f"{i}")
-            
+        if texts == False:
+            st.warning("Nothing detected")
+        else:
+            st.success("Detected")
+            for i in texts:
+                st.text(f"{i}")
+except:
+    st.warning("Nothing detected")
+
             
 
 
